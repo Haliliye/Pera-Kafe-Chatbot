@@ -333,19 +333,37 @@ with st.sidebar:
     st.title("☕ Pera Kafe")
     st.markdown("---")
     
-    # Menü En Üstte
     st.header("📜 Menü")
+    
     if menu_db:
-        secilen_kategori = st.selectbox("Kategori:", list(menu_db.keys()))
+        # Varsayılan kategori (Session state yoksa ilkini al)
+        if "secili_kat" not in st.session_state:
+            st.session_state.secili_kat = list(menu_db.keys())[0]
+
+        # Dropdown görünümü veren Expander
+        with st.expander(f"{st.session_state.secili_kat}", expanded=False):
+            # İçine radio buton koyuyoruz ama sadece seçim için
+            yeni_secim = st.radio(
+                "Gizli Başlık",
+                list(menu_db.keys()),
+                label_visibility="collapsed",
+                index=list(menu_db.keys()).index(st.session_state.secili_kat)
+            )
+            
+            # Seçim değişirse state'i güncelle (ve sayfa yenilensin diye)
+            if yeni_secim != st.session_state.secili_kat:
+                st.session_state.secili_kat = yeni_secim
+                st.rerun()
+
+        # Listeleme
+        secilen_kategori = st.session_state.secili_kat
         if secilen_kategori in menu_db:
-            # Ürünleri listele
             for item in menu_db[secilen_kategori]:
                 with st.container(border=True):
                     c1, c2 = st.columns([3, 1])
                     with c1: st.markdown(f"**{item['urun']}**")
                     with c2: st.markdown(f"*{item['taban_fiyat']}₺*")
                     st.caption(item['fiyat_gorunum'])
-
 
 # ANA EKRAN DÜZENİ
 
@@ -525,4 +543,5 @@ if final_input:
 # SES OYNATMA (Sayfa Sonu)
 if "ses_kuyrugu" in st.session_state and st.session_state.ses_kuyrugu:
     metni_oku(st.session_state.ses_kuyrugu)
+
     del st.session_state.ses_kuyrugu
